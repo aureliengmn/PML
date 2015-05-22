@@ -1,0 +1,100 @@
+---
+title: "PML writeup"
+author: "aureliengmn"
+output: html_document
+---
+
+Here is the R code I have used to build my predictive model.
+
+First I needed to import the dataset, but some predictors were imported in factor due to lots of missing values. I had to transform them to numeric.
+
+```{r}
+setwd("C:/Users/Aurelien/Documents/GitHub/PML")
+
+# Import
+data <- read.csv("pml-training.csv", sep=",", na.strings = "NA")
+nb_pred <- dim(data)[2]-1
+for (i in 7:nb_pred){
+  data[,i] <- as.numeric(data[,i])
+}
+```
+
+Before any visualization, I have divided my dataset on a training and a testing set (70% / 30%), using caret package.
+Then I've checked that predictors had some variability and i dropped the one that had not enough variation. 
+
+```{r}
+require(caret)
+
+inTrain <- createDataPartition(y=data$classe, p=0.7, list=FALSE)
+
+training <- data[inTrain, ]
+testing <- data[-inTrain, ]
+
+#preview
+head(nearZeroVar(training[,c(15:dim(training)[2])], saveMetrics = TRUE))
+
+training <- training[,-nearZeroVar(training)]
+```
+
+I plotted the distribution of each feature/classe in one big .PDF to understand the data set. Here is one example.
+
+```{r}
+#pdf("var.pdf") 
+#for (i in 1:dim(training)[2]){
+#  if (is.numeric(training[,i])==T)
+    
+#    print(qplot(training[!is.na(training[,i]),i], colour=classe, data=training[!is.na(training[,i]),],            geom="density", xlab =colnames(training[i])))
+#}
+#dev.off() 
+
+# example
+i<-12
+print(qplot(training[!is.na(training[,i]),i], colour=classe, data=training[!is.na(training[,i]),], 
+            geom="density", xlab =colnames(training[i])))
+```
+
+I had still to much predicors with missing values, that were not excluded with the nearZeroVar fonction. I used the randomForest package to assign predictors means to missing values and I dropped predictors wich had nearZeroVar with this implementation. In the end i use only 36 features to estimate the modele.
+
+```{r}
+require(randomForest)
+train_na <- na.roughfix(training)
+
+train_final <- train_na[,-nearZeroVar(train_na)]
+```
+
+I choose to use a RandomForest classification to solve the problem because it can deal easely with extreme values and predictors don't need to be standardized. I made different models and i found that didn't need to run 500 tree (the default option) which was time consuming. I've choose instead to do some repeated cross validations to select the best forest with 100 trees.
+
+```{r}
+library(doParallel)
+cl <- makeCluster(detectCores())
+registerDoParallel(cl)
+
+tc <- trainControl("repeatedcv", number=10, repeats=5, classProbs=TRUE, savePred=T)
+
+RF <- train(classe~., data=train_final, method="rf", ntree=100, tuneGrid=data.frame(.mtry = 3), trControl=tc, 
+            allowParallel=T, importance = TRUE)
+
+stopCluster(cl)
+RF$finalModel
+
+plot(RF$finalModel)
+```
+
+We can see here that the error was almost at its minimum at 30 trees. 
+
+On the model summary, We can see that the Out Of Bag Error is very low, around 0.1 on the training dataset.
+
+I had printed features that had importance in models construction, and I applied the model on the testing dataset to print the confusion matrix on unseen data. Only few observations are on the wrong "classe".
+
+```{r}
+head(varImp(RF$finalModel, scale=TRUE))
+
+testing <- na.roughfix(testing)
+pred <- predict(RF,testing)
+
+confusionMatrix(pred, testing$classe)
+```
+
+Here, the confusion matrix show some very good performance on the model, only 5 observations are on the wrong "classe", the accuracy is almost 1.
+
+I have applied this model to predict the "classe" variable on the 20 observations dataset for the submission and it scored 20 on 20.
