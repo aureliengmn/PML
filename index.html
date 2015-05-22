@@ -154,7 +154,7 @@ img {
 <span class="keyword">for</span> <span class="paren">(</span><span class="identifier">i</span> <span class="keyword">in</span> <span class="number">7</span><span class="operator">:</span><span class="identifier">nb_pred</span><span class="paren">)</span><span class="paren">{</span>
   <span class="identifier">data</span><span class="paren">[</span>,<span class="identifier">i</span><span class="paren">]</span> <span class="operator">&lt;-</span> <span class="identifier">as.numeric</span><span class="paren">(</span><span class="identifier">data</span><span class="paren">[</span>,<span class="identifier">i</span><span class="paren">]</span><span class="paren">)</span>
 <span class="paren">}</span></code></pre>
-<p>Before any visualization, I have divided my dataset on a training and a testing set (70% / 30%), using caret package. Then I’ve checked that predictors had some variability and i dropped the one that had not enough variation.</p>
+<p>Before any visualization, I have divided my dataset on a training and a testing set (70% / 30%), using caret package. Then I’ve checked that predictors had some variability and I have dropped the ones that had not enough variation.</p>
 <pre class="r"><code class="r"><span class="keyword">require</span><span class="paren">(</span><span class="identifier">caret</span><span class="paren">)</span></code></pre>
 <pre><code>## Loading required package: caret
 ## Loading required package: lattice
@@ -274,7 +274,7 @@ img {
 ## Detection Rate         0.2845   0.1932   0.1743   0.1635   0.1837
 ## Detection Prevalence   0.2848   0.1932   0.1747   0.1636   0.1837
 ## Balanced Accuracy      0.9998   0.9991   0.9998   0.9989   0.9995</code></pre>
-<p>Here, the confusion matrix show some very good performance on the model, only 5 observations are on the wrong "classe", the accuracy is almost 1.</p>
+<p>Here, the confusion matrix shows some very good performance on the model, only 5 observations are on the wrong "classe", the accuracy is almost 1.</p>
 <p>I have applied this model to predict the “classe” variable on the 20 observations dataset for the submission and it scored 20 on 20.</p>
 </div>
 
